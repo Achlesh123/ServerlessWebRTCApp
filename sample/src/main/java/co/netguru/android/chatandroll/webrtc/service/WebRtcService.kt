@@ -12,6 +12,7 @@ import co.netguru.android.chatandroll.app.App
 import co.netguru.android.chatandroll.common.extension.getColorCompat
 import co.netguru.android.chatandroll.feature.base.service.BaseServiceWithFacade
 import co.netguru.android.chatandroll.feature.main.MainActivity
+import org.webrtc.SessionDescription
 import org.webrtc.SurfaceViewRenderer
 import timber.log.Timber
 import javax.inject.Inject
@@ -65,9 +66,19 @@ class WebRtcService : BaseServiceWithFacade<WebRtcServiceFacade, WebRtcServiceCo
         webRtcServiceController.serviceListener = null
     }
 
-    fun offerDevice(deviceUuid: String) {
-        webRtcServiceController.offerDevice(deviceUuid)
+    fun offerDevice() {
+        webRtcServiceController.offerDevice()
     }
+
+    fun handleRemoteOffer(remoteSessionDescription: SessionDescription?) {
+            webRtcServiceController.handleRemoteOffer(remoteSessionDescription!!)
+    }
+
+    fun handleRemoteAnswer(remoteSessionDescription: SessionDescription?) {
+        webRtcServiceController.handleRemoteAnswer(remoteSessionDescription!!)
+    }
+
+
 
     fun attachRemoteView(remoteView: SurfaceViewRenderer) {
         webRtcServiceController.attachRemoteView(remoteView)

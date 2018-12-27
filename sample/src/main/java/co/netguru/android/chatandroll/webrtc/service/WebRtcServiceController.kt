@@ -2,6 +2,7 @@ package co.netguru.android.chatandroll.webrtc.service
 
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import co.netguru.videochatguru.PeerConnectionListener
 import co.netguru.videochatguru.WebRtcAnsweringPartyListener
 import co.netguru.videochatguru.WebRtcClient
@@ -16,6 +17,7 @@ import co.netguru.android.chatandroll.feature.base.service.BaseServiceController
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.plusAssign
 import io.reactivex.rxkotlin.subscribeBy
+import org.json.JSONObject
 import org.webrtc.IceCandidate
 import org.webrtc.PeerConnection
 import org.webrtc.SessionDescription
@@ -43,8 +45,18 @@ class WebRtcServiceController @Inject constructor(
 
     override fun attachService(service: WebRtcServiceFacade) {
         super.attachService(service)
-        loadIceServers()
+        //loadIceServers()
+
+//        listenForOffers()
+        initializeWebRtc(iceServers)
     }
+
+    val iceServers = listOf(PeerConnection.IceServer("stun:stun.l.google.com:19302"),
+            PeerConnection.IceServer("stun:stun1.l.google.com:19302"),
+            PeerConnection.IceServer("stun:stun2.l.google.com:19302"),
+            PeerConnection.IceServer("stun:stu3.l.google.com:19302"),
+            PeerConnection.IceServer("stun:stun4.l.google.com:19302"))
+
 
     override fun detachService() {
         super.detachService()
@@ -53,11 +65,12 @@ class WebRtcServiceController @Inject constructor(
         webRtcClient.dispose()
     }
 
-    fun offerDevice(deviceUuid: String) {
+    fun offerDevice() {
         isOfferingParty = true
-        this.remoteUuid = deviceUuid
-        listenForIceCandidates(deviceUuid)
-        if (finishedInitializing) webRtcClient.createOffer() else shouldCreateOffer = true
+        if (finishedInitializing)
+            webRtcClient.createOffer()
+        else
+            shouldCreateOffer = true
     }
 
     fun attachRemoteView(remoteView: SurfaceViewRenderer) {
@@ -90,8 +103,8 @@ class WebRtcServiceController @Inject constructor(
         disposables += firebaseIceServers.getIceServers()
                 .subscribeBy(
                         onSuccess = {
-                            listenForOffers()
-                            initializeWebRtc(it)
+//                            listenForOffers()
+//                            initializeWebRtc(it)
                         },
                         onError = {
                             handleCriticalException(it)
@@ -127,7 +140,7 @@ class WebRtcServiceController @Inject constructor(
                     }
 
                     override fun onOfferRemoteDescription(localSessionDescription: SessionDescription) {
-                        listenForAnswers()
+//                        listenForAnswers()
                         sendOffer(localSessionDescription)
                     }
 
@@ -141,110 +154,50 @@ class WebRtcServiceController @Inject constructor(
                         sendAnswer(localSessionDescription)
                     }
                 })
-        if (shouldCreateOffer) webRtcClient.createOffer()
+//        if (shouldCreateOffer)
+//            webRtcClient.createOffer()
         finishedInitializing = true
     }
 
-
-    private fun listenForIceCandidates(remoteUuid: String) {
-        disposables += firebaseIceCandidates.get(remoteUuid)
-                .compose(RxUtils.applyFlowableIoSchedulers())
-                .subscribeBy(
-                        onNext = {
-                            if (it is ChildEventAdded) {
-                                webRtcClient.addRemoteIceCandidate(it.data)
-                            } else {
-                                webRtcClient.removeRemoteIceCandidate(arrayOf(it.data))
-                            }
-                        },
-                        onError = {
-                            handleCriticalException(it)
-                        }
-                )
-    }
-
     private fun sendIceCandidate(iceCandidate: IceCandidate) {
-        disposables += firebaseIceCandidates.send(iceCandidate)
-                .compose(RxUtils.applyCompletableIoSchedulers())
-                .subscribeBy(
-                        onComplete = {
-                            Timber.d("Ice message sent")
-                        },
-                        onError = {
-                            Timber.e(it, "Error while sending message")
-                        }
-                )
+        webRtcClient.addRemoteIceCandidate(iceCandidate)
     }
 
     private fun removeIceCandidates(iceCandidates: Array<IceCandidate>) {
-        disposables += firebaseIceCandidates.remove(iceCandidates)
-                .compose(RxUtils.applyCompletableIoSchedulers())
-                .subscribeBy(
-                        onComplete = {
-                            Timber.d("Ice candidates successfully removed")
-                        },
-                        onError = {
-                            Timber.e(it, "Error while removing ice candidates")
-                        }
-                )
+        webRtcClient.removeRemoteIceCandidate(iceCandidates)
     }
 
     private fun sendOffer(localDescription: SessionDescription) {
-        disposables += firebaseSignalingOffers.create(
-                recipientUuid = remoteUuid ?: throw IllegalArgumentException("Remote uuid should be set first"),
-                localSessionDescription = localDescription
-        )
-                .compose(RxUtils.applyCompletableIoSchedulers())
-                .subscribeBy(
-                        onComplete = {
-                            Timber.d("description set")
-                        },
-                        onError = {
-                            handleCriticalException(it)
-                        }
-                )
+
+        var createdOfferString = sessionDescriptionToJSON(localDescription).toString()
+        Log.d("CreatedOffer", createdOfferString);
+        serviceListener?.showCreatedOffer(createdOfferString)
     }
 
-    private fun listenForOffers() {
-        disposables += firebaseSignalingOffers.listenForNewOffersWithUuid()
-                .compose(RxUtils.applyFlowableIoSchedulers())
-                .subscribeBy(
-                        onNext = { (sessionDescription, remoteUuid) ->
-                            this.remoteUuid = remoteUuid
-                            listenForIceCandidates(remoteUuid)
-                            webRtcClient.handleRemoteOffer(sessionDescription)
-                        },
-                        onError = {
-                            handleCriticalException(it)
-                        }
-                )
+    private val JSON_TYPE = "type"
+    private val JSON_MESSAGE = "message"
+    private val JSON_SDP = "sdp"
+
+    private fun sessionDescriptionToJSON(sessDesc: SessionDescription): JSONObject {
+        val json = JSONObject()
+        json.put(JSON_TYPE, sessDesc.type.canonicalForm())
+        json.put(JSON_SDP, sessDesc.description)
+        return json
+    }
+
+    fun handleRemoteOffer(sessionDescription : SessionDescription) {
+        webRtcClient.handleRemoteOffer(sessionDescription)
+
+    }
+
+    fun handleRemoteAnswer(sessionDescription: SessionDescription) {
+        webRtcClient.handleRemoteAnswer(sessionDescription)
     }
 
     private fun sendAnswer(localDescription: SessionDescription) {
-        disposables += firebaseSignalingAnswers.create(
-                recipientUuid = remoteUuid ?: throw IllegalArgumentException("Remote uuid should be set first"),
-                localSessionDescription = localDescription
-        )
-                .compose(RxUtils.applyCompletableIoSchedulers())
-                .subscribeBy(
-                        onError = {
-                            handleCriticalException(it)
-                        }
-                )
-    }
-
-    private fun listenForAnswers() {
-        disposables += firebaseSignalingAnswers.listenForNewAnswers()
-                .compose(RxUtils.applyFlowableIoSchedulers())
-                .subscribeBy(
-                        onNext = {
-                            Timber.d("Next answer $it")
-                            webRtcClient.handleRemoteAnswer(it)
-                        },
-                        onError = {
-                            handleCriticalException(it)
-                        }
-                )
+        var createdAnswerString = sessionDescriptionToJSON(localDescription).toString()
+        Log.d("CreatedAnswer", createdAnswerString);
+        serviceListener?.showCreatedAnswer(createdAnswerString)
     }
 
     private fun handleCriticalException(throwable: Throwable) {

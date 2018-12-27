@@ -18,4 +18,9 @@ class MainActivity : BaseActivity() {
             getReplaceFragmentTransaction(R.id.fragmentContainer, videoFragment, VideoFragment.TAG).commit()
         }
     }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        videoFragment.disconnect()
+    }
 }

@@ -11,4 +11,7 @@ interface WebRtcServiceListener {
     fun criticalWebRTCServiceException(throwable: Throwable)
 
     fun connectionStateChange(iceConnectionState: PeerConnection.IceConnectionState)
+
+    fun showCreatedOffer(offer : String)
+    fun showCreatedAnswer(answer : String)
 }

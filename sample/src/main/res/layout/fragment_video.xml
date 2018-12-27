@@ -36,7 +36,82 @@
         android:layout_gravity="center"
         android:layout_marginTop="@dimen/splash_screen_vertical_margin"
         android:background="@drawable/rounded_button"
+        android:visibility="gone"
         android:text="@string/action_start"/>
+
+    <RelativeLayout
+        android:visibility="visible"
+        android:id="@+id/relative_offer"
+        android:layout_width="match_parent"
+        android:layout_weight="1"
+        android:layout_height="match_parent"
+        android:paddingLeft="@dimen/activity_horizontal_margin"
+        android:paddingTop="@dimen/activity_horizontal_margin"
+        android:paddingRight="@dimen/activity_horizontal_margin"
+        android:paddingBottom="@dimen/activity_horizontal_margin">
+
+        <Button
+            android:id="@+id/btnCreateOffer"
+            android:layout_marginBottom="8dp"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentTop="true"
+            android:text="Create Offer"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true" />
+
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/recyclerView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/btnCreateOffer"
+            android:layout_above="@+id/re_bottomlayout" />
+
+
+        <RelativeLayout
+            android:layout_marginTop="8dp"
+            android:layout_alignParentBottom="true"
+            android:id="@+id/re_bottomlayout"
+            android:layout_width="match_parent"
+            android:layout_height="100dp">
+
+            <EditText
+                android:scrollbars="vertical"
+                android:id="@+id/edEnterArea"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_alignParentBottom="true"
+                android:layout_toLeftOf="@+id/btSubmit"
+                android:textColor="#000000"
+                android:textColorHint="#d1d1d1"
+                android:imeActionLabel="Send"
+                android:inputType="textMultiLine"
+                android:layout_toStartOf="@+id/btSubmit" />
+
+            <ProgressBar
+                android:id="@+id/progressBar"
+                style="?android:attr/progressBarStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignTop="@+id/edEnterArea"
+                android:layout_alignEnd="@+id/edEnterArea"
+                android:layout_alignRight="@+id/edEnterArea"
+                android:layout_alignBottom="@+id/edEnterArea" />
+
+            <Button
+                android:layout_alignParentBottom="true"
+                android:id="@+id/btSubmit"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
+                android:layout_alignParentRight="true"
+                android:text="Submit" />
+
+        </RelativeLayout>
+
+
+
+    </RelativeLayout>
 
     <LinearLayout
         android:id="@+id/buttonPanel"
