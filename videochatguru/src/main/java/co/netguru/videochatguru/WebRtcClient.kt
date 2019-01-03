@@ -3,11 +3,13 @@ package co.netguru.videochatguru
 import android.content.Context
 import android.os.Handler
 import android.os.Looper
+import android.widget.Toast
 import co.netguru.videochatguru.constraints.*
 import co.netguru.videochatguru.util.Logger
 import co.netguru.videochatguru.util.WebRtcUtils
 import co.netguru.videochatguru.util.addConstraints
 import org.webrtc.*
+import java.lang.Exception
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -166,7 +168,11 @@ open class WebRtcClient(context: Context,
         singleThreadExecutor.execute {
             this.peerConnectionListener = peerConnectionListener
             val rtcConfig = PeerConnection.RTCConfiguration(iceServers)
-            peerConnection = peerConnectionFactory.createPeerConnection(rtcConfig, getPeerConnectionMediaConstraints(), videoPeerConnectionListener)
+
+            try {
+                peerConnection = peerConnectionFactory.createPeerConnection(rtcConfig, getPeerConnectionMediaConstraints(), videoPeerConnectionListener)
+            } catch (e : Exception) {
+            }
             isPeerConnectionInitialized = true
 
             val localMediaStream = peerConnectionFactory.createLocalMediaStream(getCounterStringValueAndIncrement())

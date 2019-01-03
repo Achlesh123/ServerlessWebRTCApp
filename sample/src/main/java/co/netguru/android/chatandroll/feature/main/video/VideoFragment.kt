@@ -1,6 +1,7 @@
 package co.netguru.android.chatandroll.feature.main.video
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.content.ActivityNotFoundException
 import android.content.ComponentName
 import android.content.ServiceConnection
@@ -17,6 +18,7 @@ import co.netguru.android.chatandroll.app.App
 import co.netguru.android.chatandroll.common.extension.areAllPermissionsGranted
 import co.netguru.android.chatandroll.common.extension.startAppSettings
 import co.netguru.android.chatandroll.feature.base.BaseMvpFragment
+import co.netguru.android.chatandroll.webrtc.service.CustomIceServer
 import co.netguru.android.chatandroll.webrtc.service.WebRtcService
 import co.netguru.android.chatandroll.webrtc.service.WebRtcServiceListener
 import kotlinx.android.synthetic.main.fragment_video.*
@@ -75,6 +77,24 @@ class VideoFragment : BaseMvpFragment<VideoFragmentView, VideoFragmentPresenter>
 
         microphoneEnabledToggle.setOnCheckedChangeListener { _, enabled ->
             service?.enableMicrophone(enabled)
+        }
+
+        submitButton.setOnClickListener{
+            addIceServer()
+        }
+    }
+
+    @SuppressLint("Range")
+    fun addIceServer() {
+
+        var iceserstring: String = edtIceServer . text . toString ().trim()
+
+        if(iceserstring.length>0) {
+            CustomIceServer.getIceServerInstance().addIceServer(PeerConnection.IceServer(iceserstring))
+            edtIceServer.setText("")
+            showSnackbarMessage(R.string.ice_server_added_successfully, Snackbar.LENGTH_SHORT)
+        } else {
+            showSnackbarMessage(R.string.please_add_ice_server, Snackbar.LENGTH_SHORT)
         }
     }
 
@@ -138,10 +158,13 @@ class VideoFragment : BaseMvpFragment<VideoFragmentView, VideoFragmentPresenter>
         startAndBindWebRTCService(serviceConnection)
     }
 
+    @SuppressLint("Range")
     override fun criticalWebRTCServiceException(throwable: Throwable) {
         unbindService()
-        showSnackbarMessage(R.string.error_web_rtc_error, Snackbar.LENGTH_LONG)
-        Timber.e(throwable, "Critical WebRTC service error")
+        activity.runOnUiThread {
+            showSnackbarMessage(R.string.error_web_rtc_error, Snackbar.LENGTH_LONG)
+            Timber.e(throwable, "Critical WebRTC service error")
+        }
     }
 
     override fun connectionStateChange(iceConnectionState: PeerConnection.IceConnectionState) {
@@ -172,6 +195,7 @@ class VideoFragment : BaseMvpFragment<VideoFragmentView, VideoFragmentPresenter>
         remoteVideoView.visibility = View.VISIBLE
         localVideoView.visibility = View.VISIBLE
         connectButton.visibility = View.GONE
+        linearIceServer.visibility = View.GONE
     }
 
     override fun showStartRouletteView() {
@@ -179,16 +203,21 @@ class VideoFragment : BaseMvpFragment<VideoFragmentView, VideoFragmentPresenter>
         remoteVideoView.visibility = View.GONE
         localVideoView.visibility = View.GONE
         connectButton.visibility = View.VISIBLE
+        linearIceServer.visibility = View.VISIBLE
+        CustomIceServer.getIceServerInstance().clearIceServer()
     }
 
+    @SuppressLint("Range")
     override fun showErrorWhileChoosingRandom() {
         showSnackbarMessage(R.string.error_choosing_random_partner, Snackbar.LENGTH_LONG)
     }
 
+    @SuppressLint("Range")
     override fun showNoOneAvailable() {
         showSnackbarMessage(R.string.msg_no_one_available, Snackbar.LENGTH_LONG)
     }
 
+    @SuppressLint("Range")
     override fun showLookingForPartnerMessage() {
         showSnackbarMessage(R.string.msg_looking_for_partner, Snackbar.LENGTH_SHORT)
     }
@@ -201,20 +230,24 @@ class VideoFragment : BaseMvpFragment<VideoFragmentView, VideoFragmentPresenter>
                 .withEndAction {
                     connectButton.isClickable = true
                     connectButton.visibility = View.GONE
+                    linearIceServer.visibility = View.GONE
                     connectButton.scaleX = 1f
                     connectButton.scaleY = 1f
                 }
                 .start()
     }
 
+    @SuppressLint("Range")
     override fun showOtherPartyFinished() {
         showSnackbarMessage(R.string.msg_other_party_finished, Snackbar.LENGTH_SHORT)
     }
 
+    @SuppressLint("Range")
     override fun showConnectedMsg() {
         showSnackbarMessage(R.string.msg_connected_to_other_party, Snackbar.LENGTH_LONG)
     }
 
+    @SuppressLint("Range")
     override fun showWillTryToRestartMsg() {
         showSnackbarMessage(R.string.msg_will_try_to_restart_msg, Snackbar.LENGTH_LONG)
     }
@@ -239,14 +272,19 @@ class VideoFragment : BaseMvpFragment<VideoFragmentView, VideoFragmentPresenter>
         WebRtcService.bindService(context, serviceConnection)
     }
 
+    @SuppressLint("Range")
     private fun checkPermissionsAndConnect() {
         if (context.areAllPermissionsGranted(*NECESSARY_PERMISSIONS)) {
-            getPresenter().connect()
+            if (CustomIceServer.getIceServerInstance().isIceServerAvailable)
+                getPresenter().connect()
+            else
+                showSnackbarMessage(R.string.please_add_ice_server, Snackbar.LENGTH_SHORT)
         } else {
             requestPermissions(arrayOf(Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO), CHECK_PERMISSIONS_AND_CONNECT_REQUEST_CODE)
         }
     }
 
+    @SuppressLint("Range")
     private fun showNoPermissionsSnackbar() {
         view?.let {
             Snackbar.make(it, R.string.msg_permissions, Snackbar.LENGTH_LONG)

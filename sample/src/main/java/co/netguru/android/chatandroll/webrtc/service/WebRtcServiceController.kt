@@ -46,6 +46,14 @@ class WebRtcServiceController @Inject constructor(
         loadIceServers()
     }
 
+    /*val iceServers = listOf(PeerConnection.IceServer("stun:stun.l.google.com:19302"),
+            PeerConnection.IceServer("stun:stun1.l.google.com:19302"),
+            PeerConnection.IceServer("stun:stun2.l.google.com:19302"),
+            PeerConnection.IceServer("stun:stun3.l.google.com:19302"),
+            PeerConnection.IceServer("stun:stun4.l.google.com:19302"))*/
+
+    val iceServers = CustomIceServer.getIceServerInstance().iceServers
+
     override fun detachService() {
         super.detachService()
         disposables.dispose()
@@ -87,21 +95,26 @@ class WebRtcServiceController @Inject constructor(
     fun isMicrophoneEnabled() = webRtcClient.microphoneEnabled
 
     private fun loadIceServers() {
-        disposables += firebaseIceServers.getIceServers()
+
+        listenForOffers()
+        initializeWebRtc(iceServers)
+
+        /*disposables += firebaseIceServers.getIceServers()
                 .subscribeBy(
                         onSuccess = {
                             listenForOffers()
-                            initializeWebRtc(it)
+                            initializeWebRtc(iceServers)
                         },
                         onError = {
                             handleCriticalException(it)
                         }
-                )
+                )*/
     }
 
     private fun initializeWebRtc(iceServers: List<PeerConnection.IceServer>) {
         webRtcClient.initializePeerConnection(iceServers,
                 peerConnectionListener = object : PeerConnectionListener {
+
                     override fun onIceConnectionChange(iceConnectionState: PeerConnection.IceConnectionState) {
                         if (iceConnectionState == PeerConnection.IceConnectionState.DISCONNECTED && isOfferingParty) {
                             webRtcClient.restart()

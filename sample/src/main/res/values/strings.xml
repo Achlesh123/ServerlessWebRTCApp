@@ -14,6 +14,8 @@
     <string name="msg_permissions">Camera and audio access is needed for Chat&amp;Roll to function</string>
     <string name="msg_will_try_to_restart_msg">Connection with other party was lost, trying to reconnect…</string>
     <string name="msg_connected_to_other_party">Connected to other party. Have fun!</string>
+    <string name="please_add_ice_server">Please Add an ICE Server first.</string>
+    <string name="ice_server_added_successfully">ICE Server added successfully.</string>
 
     <string name="desc_hangup">Hangup</string>
     <string name="desc_switch_camera">Switch camera</string>

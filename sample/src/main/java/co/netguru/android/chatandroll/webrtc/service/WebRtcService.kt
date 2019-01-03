@@ -104,13 +104,13 @@ class WebRtcService : BaseServiceWithFacade<WebRtcServiceFacade, WebRtcServiceCo
         }
         val pendingMainActivityIntent = PendingIntent.getActivity(this, PENDING_INTENT_REQUEST_CODE, mainActivityIntent, PendingIntent.FLAG_UPDATE_CURRENT)
         val notification = NotificationCompat.Builder(this, App.BACKGROUND_WORK_NOTIFICATIONS_CHANNEL_ID)
-                .setSmallIcon(R.drawable.ic_notification_small_logo)
+                .setSmallIcon(R.mipmap.ic_launcher)
                 .setContentTitle(getString(R.string.ongoing_call_notification_title))
                 .setContentText(getString(R.string.ongoing_call_notification_text))
                 .setColor(getColorCompat(R.color.accent))
                 .setContentIntent(pendingMainActivityIntent)
                 .setOngoing(true)
-                .setDefaults(NotificationCompat.DEFAULT_VIBRATE)
+//                .setDefaults(NotificationCompat.DEFAULT_VIBRATE)
                 .build()
         notificationManager.notify(BACKGROUND_WORK_NOTIFICATION_ID, notification)
     }

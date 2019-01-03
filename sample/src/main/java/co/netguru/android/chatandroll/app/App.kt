@@ -15,6 +15,7 @@ import co.netguru.videochatguru.enableWebRtcLogs
 import co.netguru.android.chatandroll.BuildConfig
 import co.netguru.android.chatandroll.R
 import co.netguru.android.chatandroll.data.firebase.FirebaseModule
+import co.netguru.android.chatandroll.webrtc.service.CustomIceServer
 import com.squareup.leakcanary.LeakCanary
 import org.webrtc.Logging
 import timber.log.Timber
@@ -52,6 +53,7 @@ class App : Application() {
             return
         }
         LeakCanary.install(this)*/
+        CustomIceServer.getIceServerInstance()
         if (BuildConfig.DEBUG) {
             Timber.plant(Timber.DebugTree())
             //Enables WebRTC Logging
