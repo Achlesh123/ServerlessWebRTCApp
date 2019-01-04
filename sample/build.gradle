@@ -61,6 +61,8 @@ dependencies {
 
     compile libs.firebaseDatabase
 
+    implementation 'com.google.code.gson:gson:2.8.5'
+
     testCompile test.junit
     testCompile test.mockito
     testCompile(test.mockitoKotlin) {

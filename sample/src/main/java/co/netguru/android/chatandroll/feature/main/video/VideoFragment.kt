@@ -11,6 +11,7 @@ import android.os.Bundle
 import android.os.IBinder
 import android.support.design.widget.CoordinatorLayout
 import android.support.design.widget.Snackbar
+import android.support.v7.widget.LinearLayoutManager
 import android.view.View
 import android.view.animation.OvershootInterpolator
 import co.netguru.android.chatandroll.R
@@ -79,10 +80,56 @@ class VideoFragment : BaseMvpFragment<VideoFragmentView, VideoFragmentPresenter>
             service?.enableMicrophone(enabled)
         }
 
-        submitButton.setOnClickListener{
+        addButton.setOnClickListener{
             addIceServer()
         }
+
+        submitButton.setOnClickListener{
+            addDeviceIdName()
+        }
     }
+
+    @SuppressLint("Range")
+    var onlineDeviceSelectedListener: OnlineDeviceSelectedListener = OnlineDeviceSelectedListener {
+
+        showCamViews()
+        connectTo(it)
+    }
+
+    override fun showOnlineDevicesList(onlineDevices: ArrayList<String>) {
+
+        if(onlineDevices == null)
+            return
+
+        if(onlineDevices.size == 0) {
+            showNoOneAvailable()
+            return
+        }
+
+
+        // Creates a vertical Layout Manager
+        rvOnlineDevices.layoutManager = LinearLayoutManager(activity)
+
+        // Access the RecyclerView Adapter and load the data into it
+        rvOnlineDevices.adapter = OnlineDeviceAdapter(onlineDeviceSelectedListener,onlineDevices)
+        reOnlineDevice.visibility = View.VISIBLE
+    }
+
+    @SuppressLint("Range")
+    fun addDeviceIdName() {
+
+        var deviceIdName: String = edtDeviceId . text . toString ().trim()
+
+        if(deviceIdName.length>0) {
+            App.setCurrentDeviceUuid(deviceIdName)
+            showSnackbarMessage(R.string.device_name_added_successfully, Snackbar.LENGTH_SHORT)
+            linearDevideId.visibility = View.GONE
+            linearAddIceServer.visibility = View.VISIBLE
+        } else {
+            showSnackbarMessage(R.string.please_add_device_name, Snackbar.LENGTH_SHORT)
+        }
+    }
+
 
     @SuppressLint("Range")
     fun addIceServer() {
@@ -93,6 +140,7 @@ class VideoFragment : BaseMvpFragment<VideoFragmentView, VideoFragmentPresenter>
             CustomIceServer.getIceServerInstance().addIceServer(PeerConnection.IceServer(iceserstring))
             edtIceServer.setText("")
             showSnackbarMessage(R.string.ice_server_added_successfully, Snackbar.LENGTH_SHORT)
+            connectButton.visibility = View.VISIBLE
         } else {
             showSnackbarMessage(R.string.please_add_ice_server, Snackbar.LENGTH_SHORT)
         }
@@ -195,7 +243,9 @@ class VideoFragment : BaseMvpFragment<VideoFragmentView, VideoFragmentPresenter>
         remoteVideoView.visibility = View.VISIBLE
         localVideoView.visibility = View.VISIBLE
         connectButton.visibility = View.GONE
-        linearIceServer.visibility = View.GONE
+        linearAddIceServer.visibility = View.GONE
+        reOnlineDevice.visibility = View.GONE
+        rvOnlineDevices.adapter = OnlineDeviceAdapter(onlineDeviceSelectedListener,ArrayList<String>())
     }
 
     override fun showStartRouletteView() {
@@ -203,7 +253,7 @@ class VideoFragment : BaseMvpFragment<VideoFragmentView, VideoFragmentPresenter>
         remoteVideoView.visibility = View.GONE
         localVideoView.visibility = View.GONE
         connectButton.visibility = View.VISIBLE
-        linearIceServer.visibility = View.VISIBLE
+        linearAddIceServer.visibility = View.VISIBLE
         CustomIceServer.getIceServerInstance().clearIceServer()
     }
 
@@ -230,7 +280,7 @@ class VideoFragment : BaseMvpFragment<VideoFragmentView, VideoFragmentPresenter>
                 .withEndAction {
                     connectButton.isClickable = true
                     connectButton.visibility = View.GONE
-                    linearIceServer.visibility = View.GONE
+                    linearAddIceServer.visibility = View.VISIBLE
                     connectButton.scaleX = 1f
                     connectButton.scaleY = 1f
                 }
@@ -244,6 +294,7 @@ class VideoFragment : BaseMvpFragment<VideoFragmentView, VideoFragmentPresenter>
 
     @SuppressLint("Range")
     override fun showConnectedMsg() {
+        showCamViews()
         showSnackbarMessage(R.string.msg_connected_to_other_party, Snackbar.LENGTH_LONG)
     }
 

@@ -27,5 +27,4 @@ abstract class BaseMvpFragment<T : MvpView, out P : Presenter<T>> : BaseFragment
     abstract fun retrievePresenter(): P
 
     fun getPresenter(): P = presenter
-
 }

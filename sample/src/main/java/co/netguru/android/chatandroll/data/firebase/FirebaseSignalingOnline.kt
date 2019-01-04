@@ -3,6 +3,7 @@ package co.netguru.android.chatandroll.data.firebase
 import co.netguru.android.chatandroll.app.App
 import co.netguru.android.chatandroll.data.model.RouletteConnectionFirebase
 import com.google.firebase.database.*
+import com.google.gson.Gson
 import io.reactivex.Completable
 import io.reactivex.Maybe
 import timber.log.Timber
@@ -38,6 +39,8 @@ class FirebaseSignalingOnline @Inject constructor(private val firebaseDatabase: 
 
     private fun chooseRandomDevice(): Maybe<String> = Maybe.create {
         var lastUuid: String? = null
+        var deviceListString : String? = null
+
 
         firebaseDatabase.getReference(ONLINE_DEVICES_PATH).runTransaction(object : Transaction.Handler {
             override fun doTransaction(mutableData: MutableData): Transaction.Result {
@@ -46,9 +49,19 @@ class FirebaseSignalingOnline @Inject constructor(private val firebaseDatabase: 
                 val availableDevices = mutableData.getValue(genericTypeIndicator) ?:
                         return Transaction.success(mutableData)
 
-                val removedSelfValue = availableDevices.remove(App.CURRENT_DEVICE_UUID)
+//                val removedSelfValue = availableDevices.remove(App.CURRENT_DEVICE_UUID)
 
-                if (removedSelfValue != null && !availableDevices.isEmpty()) {
+                if (/*removedSelfValue != null && */!availableDevices.isEmpty()) {
+
+                    var onlineDeviceList = ArrayList(availableDevices.keys)
+
+                    if(onlineDeviceList.contains(App.CURRENT_DEVICE_UUID))
+                        onlineDeviceList.remove(App.CURRENT_DEVICE_UUID)
+
+                    val gson = Gson()
+                    deviceListString = gson.toJson(onlineDeviceList)
+
+
                     lastUuid = deleteRandomDevice(availableDevices)
                     mutableData.value = availableDevices
                 }
@@ -61,7 +74,7 @@ class FirebaseSignalingOnline @Inject constructor(private val firebaseDatabase: 
                 val randomDevicePosition = SecureRandom().nextInt(devicesCount)
                 val randomDeviceToRemoveUuid = availableDevices.keys.toList()[randomDevicePosition]
                 Timber.d("Device number $randomDevicePosition from $devicesCount devices was chosen.")
-                availableDevices.remove(randomDeviceToRemoveUuid)
+//                availableDevices.remove(randomDeviceToRemoveUuid)
                 return randomDeviceToRemoveUuid
             }
 
@@ -69,7 +82,7 @@ class FirebaseSignalingOnline @Inject constructor(private val firebaseDatabase: 
                 if (databaseError != null) {
                     it.onError(databaseError.toException())
                 } else if (completed && lastUuid != null) {
-                    it.onSuccess(lastUuid as String)
+                    it.onSuccess(deviceListString as String)
                 }
                 it.onComplete()
             }

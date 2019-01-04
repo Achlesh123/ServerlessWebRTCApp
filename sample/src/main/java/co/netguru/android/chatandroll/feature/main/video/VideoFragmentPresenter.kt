@@ -4,6 +4,7 @@ import co.netguru.android.chatandroll.common.util.RxUtils
 import co.netguru.android.chatandroll.data.firebase.FirebaseSignalingDisconnect
 import co.netguru.android.chatandroll.data.firebase.FirebaseSignalingOnline
 import co.netguru.android.chatandroll.feature.base.BasePresenter
+import com.google.gson.Gson
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.disposables.Disposable
 import io.reactivex.disposables.Disposables
@@ -37,8 +38,10 @@ class VideoFragmentPresenter @Inject constructor(
                 .subscribeBy(
                         onSuccess = {
                             Timber.d("Next $it")
-                            getView()?.showCamViews()
-                            getView()?.connectTo(it)
+                            val onlineDevices = Gson().fromJson(it, ArrayList::class.java)
+//                            getView()?.showCamViews()
+                            getView()?.showOnlineDevicesList(onlineDevices as ArrayList<String>)
+//                            getView()?.connectTo(it)
                         },
                         onError = {
                             Timber.e(it, "Error while choosing random")
@@ -46,7 +49,7 @@ class VideoFragmentPresenter @Inject constructor(
                         },
                         onComplete = {
                             Timber.d("Done")
-                            getView()?.showCamViews()
+//                            getView()?.showCamViews()
                             getView()?.showNoOneAvailable()
                         }
                 )

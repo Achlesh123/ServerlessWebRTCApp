@@ -28,9 +28,19 @@ class App : Application() {
 
         val BACKGROUND_WORK_NOTIFICATIONS_CHANNEL_ID = "background_channel"
 
-        val CURRENT_DEVICE_UUID = UUID.randomUUID().toString()
+//        val CURRENT_DEVICE_UUID = UUID.randomUUID().toString()
+
+        lateinit var CURRENT_DEVICE_UUID : String
+
+        var isDevideIdAdded : Boolean = false
+
 
         fun get(context: Context): App = context.applicationContext as App
+
+        fun setCurrentDeviceUuid(currentUuid : String) {
+            this.CURRENT_DEVICE_UUID = currentUuid
+            this.isDevideIdAdded = true
+        }
 
         fun getApplicationComponent(context: Context): ApplicationComponent =
                 (context.applicationContext as App).applicationComponent
@@ -59,7 +69,7 @@ class App : Application() {
             //Enables WebRTC Logging
             enableWebRtcLogs(true)
             enableInternalWebRtclogs(Logging.Severity.LS_INFO)
-            Toast.makeText(this, "Uuid: ${App.CURRENT_DEVICE_UUID}", Toast.LENGTH_LONG).show()
+//            Toast.makeText(this, "Uuid: ${App.CURRENT_DEVICE_UUID}", Toast.LENGTH_LONG).show()
         } else {
             disableWebRtcLogs()
         }

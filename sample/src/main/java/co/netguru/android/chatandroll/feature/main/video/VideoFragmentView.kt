@@ -17,4 +17,5 @@ interface VideoFragmentView : MvpView {
     fun showConnectedMsg()
     fun showWillTryToRestartMsg()
     fun hideConnectButtonWithAnimation()
+    fun showOnlineDevicesList(onlineDevices : ArrayList<String>)
 }
